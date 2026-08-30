@@ -1,0 +1,370 @@
+/* ===== ルーズリーフ =====
+   スタイルは上部のラジオで「クラシック」/「リアル」を切り替え。
+   既定値 = リアル（実物写真に寄せたグレー基調）。
+   クラシック時の差分は `.controls:has(...)` で上書き。 */
+
+:root {
+    --line-height: 27px;       /* 罫線の間隔（≒A罫 7mm 相当） */
+    --rule-color: #dcdcd8;     /* 横罫線（うすいグレー） */
+    --margin-color: #cececa;   /* 左の縦マージン線（グレー） */
+    --margin-x: 92px;          /* マージン線の位置 */
+    --margin-w: 1px;           /* マージン線の太さ */
+    --paper: #fcfbf7;          /* 用紙の白（ごくわずかに暖色） */
+    --rule-top: 127px;         /* 上の余白（No./Date. + 2行分の Title / 文字を罫線から5px上に） */
+    --gutter: 104px;           /* 綴じ代（左パディング） */
+    --edge: 72px;              /* 右の余白（罫線は端まで伸ばさない） */
+    --ink: #3a3a3a;            /* 筆記色（黒鉛筆寄り） */
+    --hole: 11px;             /* 通常の綴じ穴サイズ */
+    --hole-lg: 15px;          /* 大きい綴じ穴サイズ（位置決め穴） */
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic",
+        "Meiryo", system-ui, sans-serif;
+    background: #b9b9b9;
+    background-image:
+        radial-gradient(circle at 22% 18%, #c6c6c6, transparent 60%),
+        radial-gradient(circle at 82% 85%, #ababab, transparent 55%);
+}
+
+.desk {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 16px 80px;
+}
+
+/* ===== スタイル切り替えUI ===== */
+.controls {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 20px;
+    padding: 4px;
+    background: rgba(255, 255, 255, 0.55);
+    border-radius: 999px;
+    font-size: 13px;
+    color: #444;
+}
+
+.controls label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.controls label:has(input:checked) {
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.controls input {
+    accent-color: #7d7d7d;
+}
+
+/* ===== 用紙本体 ===== */
+.sheet {
+    position: relative;
+    width: min(760px, 100%);
+    min-height: 1040px;
+    padding: var(--rule-top) var(--edge) 64px var(--gutter);
+    background: var(--paper);
+    border-radius: 4px;
+    box-shadow:
+        inset 0 0 60px rgba(120, 110, 80, 0.04),
+        0 1px 0 rgba(0, 0, 0, 0.04),
+        0 20px 44px -14px rgba(0, 0, 0, 0.4);
+}
+
+/* 紙の質感（ごく薄いムラ） */
+.sheet::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background-image:
+        radial-gradient(circle at 15% 30%, rgba(0, 0, 0, 0.012), transparent 40%),
+        radial-gradient(circle at 85% 70%, rgba(0, 0, 0, 0.012), transparent 40%);
+}
+
+/* 縦マージン線 */
+.sheet::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: var(--margin-x);
+    width: var(--margin-w);
+    background: var(--margin-color);
+}
+
+/* ===== 綴じ穴（既定：30穴 A4相当） ===== */
+.holes {
+    position: absolute;
+    top: 0;
+    left: 16px;
+    width: var(--hole-lg);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;         /* 大小の穴を同じ軸で中央そろえ */
+    justify-content: space-between;
+    padding: 34px 0;
+}
+
+.holes span {
+    width: var(--hole);
+    height: var(--hole);
+    border-radius: 50%;
+    background: #cececa;
+    box-shadow:
+        inset 0 2px 3px rgba(0, 0, 0, 0.28),
+        0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+/* 位置決め用の大きい穴：上から11個目と20個目（＝上下端から11個目・左右対称） */
+.holes span:nth-child(11),
+.holes span:nth-child(20) {
+    width: var(--hole-lg);
+    height: var(--hole-lg);
+    background: #c7c7c2;
+}
+
+/* ===== ヘッダー（No. / Date.）とフッター（極小の印字） ===== */
+.sheet-head {
+    position: absolute;
+    top: 40px;
+    left: var(--gutter);
+    right: var(--edge);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+}
+
+/* ヘッダーの各行（下に罫線） */
+.sheet-head .hrow {
+    display: flex;
+    align-items: baseline;
+    gap: 48px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid var(--margin-color);
+}
+
+.sheet-head .hrow + .hrow {
+    margin-top: 8px;
+}
+
+/* Title 行：罫線なし・高さ約2行分。文字は下の罫線から 5px 上に表示 */
+.sheet-head .hrow.title {
+    gap: 0;
+    border-bottom: 0;
+    align-items: flex-end;
+    line-height: var(--line-height);
+    min-height: calc(var(--line-height) * 2);
+    padding-bottom: 5px;
+}
+
+.sheet-head .hrow.title .field {
+    flex: 1;
+    min-width: 0;              /* 長いタイトルを2行目へ折り返せるように */
+    align-items: flex-start;
+}
+
+.sheet-head .hrow.title .value {
+    min-width: 0;
+    line-height: var(--line-height);
+    white-space: pre-wrap;
+    word-break: break-word;
+    /* 2行を超えそうなら「…」で省略（編集中は解除） */
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+}
+
+.sheet-head .hrow.title .value:focus {
+    display: block;          /* 編集中はクランプ解除して全文表示 */
+    -webkit-line-clamp: none;
+    overflow: visible;
+}
+
+.sheet-head .field {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.sheet-head .label {
+    color: #bdbdb8;
+    white-space: nowrap;
+}
+
+.sheet-head .value {
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    color: #1a1a1a;   /* 記入は黒字 */
+    outline: none;
+    min-width: 1.5em;
+}
+
+.sheet-head .value.grow {
+    flex: 1;
+}
+
+.sheet-head .value:empty::before {
+    content: attr(data-ph);
+    color: #b7b7b2;
+    font-size: 12px;
+    letter-spacing: normal;
+}
+
+.sheet-foot {
+    position: absolute;
+    right: var(--edge);
+    bottom: 22px;
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    color: #cbcbc6;
+}
+
+/* ===== 記入欄（罫線つき・編集可能） ===== */
+.writing-area {
+    position: relative;
+    min-height: 840px;
+    font-size: 16px;
+    line-height: var(--line-height);
+    color: var(--ink);
+    caret-color: var(--ink);
+    outline: none;
+    white-space: pre-wrap;
+    word-break: break-word;
+    border-top: 1px solid var(--margin-color);   /* 最上部の少し濃い罫線 */
+    background-image: repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent calc(var(--line-height) - 1px),
+        var(--rule-color) calc(var(--line-height) - 1px),
+        var(--rule-color) var(--line-height)
+    );
+}
+
+.writing-area:empty::before {
+    content: attr(data-placeholder);
+    color: #b7b7b2;
+    pointer-events: none;
+}
+
+/* 本文に貼り込んだ画像（SVG / PNG 共通）。テキストが回り込む */
+.writing-area .sample-img {
+    float: left;                            /* 既定：左寄せ → 本文は右へ回り込む */
+    clear: both;                            /* 直前の回り込みの下から開始 */
+    width: 260px;
+    max-width: 46%;
+    height: calc(var(--line-height) * 6);   /* 6行分＝回り込み後もラインが揃う */
+    margin: 0 18px 0 0;
+    padding: 6px;
+    box-sizing: border-box;
+    background: #fff;
+    border: 1px solid #d7d7d2;
+    border-radius: 2px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+/* PNG などのラスター画像は枠内に収める */
+.writing-area img.sample-img {
+    display: block;
+    object-fit: cover;
+}
+
+/* 右寄せ版：本文は画像の左へ回り込む。本文の途中に差し込んでも可 */
+.writing-area .sample-img--right {
+    float: right;
+    margin: 0 0 0 18px;
+}
+
+/* 割り込みなし版：左に配置し、本文は回り込まず画像の下から続く。
+   縦マージンは罫線ピッチの整数倍にして、画像の下のテキストを罫線に乗せる
+   （中途半端な余白を入れると以降の行がグリッドからずれる）。 */
+.writing-area .sample-img--block {
+    float: none;
+    display: block;
+    margin: 0 0 var(--line-height) 0;
+}
+
+/* ===== クラシック（最初のデザイン）への上書き ===== */
+.controls:has(input[value="classic"]:checked) ~ .sheet {
+    --line-height: 34px;
+    --rule-color: #9db8d6;
+    --margin-color: #e59a9a;
+    --margin-x: 80px;
+    --margin-w: 2px;
+    --paper: #fffef8;   /* クリーム色 */
+    --gutter: 96px;
+    --edge: 48px;
+    --rule-top: 92px;   /* クラシックはヘッダーなし */
+    --ink: #24324a;     /* 濃紺インク寄り */
+    min-height: 940px;
+}
+
+.controls:has(input[value="classic"]:checked) ~ .sheet .writing-area {
+    font-size: 18px;
+    min-height: 720px;
+    border-top: 0;
+}
+
+/* クラシックは質感ムラ・ヘッダー・フッターなし */
+.controls:has(input[value="classic"]:checked) ~ .sheet::after,
+.controls:has(input[value="classic"]:checked) ~ .sheet .sheet-head,
+.controls:has(input[value="classic"]:checked) ~ .sheet .sheet-foot {
+    display: none;
+}
+
+/* クラシックは大きめリング穴を10個だけ表示 */
+.controls:has(input[value="classic"]:checked) ~ .sheet .holes {
+    left: 30px;
+    padding: 60px 0;
+}
+
+.controls:has(input[value="classic"]:checked) ~ .sheet .holes span {
+    display: none;
+    background: #d9ccb6;
+}
+
+.controls:has(input[value="classic"]:checked) ~ .sheet .holes span:nth-child(3n + 2) {
+    display: block;
+    width: 20px;
+    height: 20px;
+}
+
+/* ===== 表示モード（リアルの見た目のまま・入力不可） =====
+   パレット等はリアル（既定）のまま。入力用の見た目だけ無効化する。
+   実際の編集不可は index.html の script が contenteditable="false" を付与。 */
+.controls:has(input[value="view"]:checked) ~ .sheet .writing-area,
+.controls:has(input[value="view"]:checked) ~ .sheet .value {
+    caret-color: transparent;
+    cursor: default;
+    -webkit-user-modify: read-only;   /* Chromium/WebKit で編集抑止（保険） */
+}
+
+.controls:has(input[value="view"]:checked) ~ .sheet .writing-area:empty::before,
+.controls:has(input[value="view"]:checked) ~ .sheet .value:empty::before {
+    content: "";                       /* 表示モードではプレースホルダーを出さない */
+}
+
+/* ===== 印刷 ===== */
+@media print {
+    body { background: none; }
+    .desk { padding: 0; }
+    .controls { display: none; }
+    .sheet { box-shadow: none; }
+    .holes span { background: #eee; box-shadow: inset 0 0 0 1px #ccc; }
+}

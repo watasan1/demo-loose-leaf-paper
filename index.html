@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>loose leaf paper</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="desk">
+        <div class="controls" role="radiogroup" aria-label="用紙スタイル">
+            <label><input type="radio" name="skin" value="classic"> クラシック</label>
+            <label><input type="radio" name="skin" value="real" checked> リアル</label>
+            <label><input type="radio" name="skin" value="view"> 表示</label>
+        </div>
+
+        <div class="sheet">
+            <div class="holes" aria-hidden="true">
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+            </div>
+
+            <div class="sheet-head">
+                <div class="hrow">
+                    <span class="field">
+                        <span class="label">No.</span>
+                        <span class="value" contenteditable="true" spellcheck="false" role="textbox" aria-label="No.">1</span>
+                    </span>
+                    <span class="field">
+                        <span class="label">Date.</span>
+                        <span class="value" contenteditable="true" spellcheck="false" role="textbox" aria-label="Date">YYYY年MM月DD日</span>
+                    </span>
+                </div>
+                <div class="hrow title">
+                    <span class="field">
+                        <span class="label">Title</span>
+                        <span class="value grow" contenteditable="true" spellcheck="false" role="textbox" aria-label="Title" data-ph="タイトルを入力"></span>
+                    </span>
+                </div>
+            </div>
+
+            <div
+                class="writing-area"
+                contenteditable="true"
+                spellcheck="false"
+                role="textbox"
+                aria-multiline="true"
+                aria-label="ルーズリーフ 記入欄"
+                data-placeholder="ここに自由に書き込めます…"
+            ></div>
+
+            <div class="sheet-foot" aria-hidden="true">LOOSE LEAF&nbsp;&nbsp;/&nbsp;&nbsp;A4&nbsp;&nbsp;/&nbsp;&nbsp;30 HOLES</div>
+        </div>
+    </div>
+
+    <script>
+        // 「表示」= リアルの見た目のまま、入力不可でサンプル文を表示するモード
+        (function () {
+            // サンプル画像（自己完結の inline SVG）。float:left で本文が右へ回り込む。
+            var SAMPLE_IMG =
+                '<svg class="sample-img" viewBox="0 0 320 210" xmlns="http://www.w3.org/2000/svg"' +
+                ' role="img" aria-label="サンプル画像">' +
+                '<rect width="320" height="210" fill="#eef1f3"/>' +
+                '<circle cx="248" cy="52" r="22" fill="#e7c66b"/>' +
+                '<path d="M0 150 L92 96 L172 140 L320 70 L320 210 L0 210 Z" fill="#a9c3a1"/>' +
+                '<path d="M0 178 L120 132 L212 170 L320 128 L320 210 L0 210 Z" fill="#8ba883"/>' +
+                '<text x="14" y="22" font-family="sans-serif" font-size="12" fill="#5f6b74">SAMPLE IMAGE</text>' +
+                '<text x="14" y="200" font-family="sans-serif" font-size="12" fill="#5f6b74">図：光合成の模式図</text>' +
+                '</svg>';
+
+            // ダミー画像（ラスターの PNG を data URI で埋め込み）。float:right で本文は左へ回り込む。
+            var PNG_URI = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQQAAACgCAIAAABlkIURAAAFJklEQVR42u3dO3IUMRAGYN+X+3AIIiKOQDkhcULCAfYYUEWVi8faK2n0aLW+rg7txZ7RN7/EzMhPnz5/0Vr/6ieHQGsYtH4Dw8dPz//0TamM9c84L8KAhMrNoBoDEiorg0YMPKiUEu5jePg9SKhkDN7E8PL9x+8u+f7XL9Y6ZpcP4/cwFH6Ww633lfDnFz/GICJ07kCow4CEzs2gGoNZk042L7qKQUToZIFwCYOI0JkCoQMGEaFzBEIfDEjoHAy6YTBr0pvOi0ZhEBF600AYggEJvSmDURjMmvQu86JJGESE3m4gDcSAhN5r8AzHYNakdxkzkzCICB1/qMzDgIQOPjxmYzBr0mFHxRoMIkIHHAzLMCChow2AxRjMmkiIc95DYBARGEQ43ff3TYq8uY0tgNLvX7TqZ4uFgQcSFv544TAggQEMLUfQIMshIcjPGRqDiBAIMCCBAQxmTeZFMIgIgQADEhjAYNZkXgSDq5FAgMH5wAAGSW1eBINrlUCAwdnCAAY5bl4EgyuZQIDBucTgBoOUNy+6weA6JxBuMDjTDk7aOg6DU+6wwODcOxQwWCY6AjC4LvrFYTAy/LIwmDP4HWFw1RQIMBg3GMBgRmFeBINrqkCAwajCAAbzDfMiGESEQIABCQxgMGsyL4JBRAgEGJDAAAazJvMiGHrW1w+huuhqPeGfUDDsQmLgJysY0kdE6QcqGBKTqPsQBcPWJHp+r4IhX0Q0poqCIROJS5MrBUMyEu1rDAXDIR4ef7iCIT2J0o9VMCQmUfeBCgbJAAMM1gwwwOB/k2CAwX0G9xlg2BiDO9AwwODZJBhg8NQqDDB4nwEGGLzpBgMM3oGGAYZpgSAiYNgGw4RAEBEwRMewhAESMITDsJaBWRMMITAsDwQRAcN6DAEZIAHDAgyRGfx5B5oHGM4NhP8fxxARMBzM4N6zSUjAcNK8qOCpVR5gOCkQHj21GjAinr+93O2FXw9DFgYFj3CHIgFDdAwbMyh+nyGIBxjiYtg7ECpf7pkcEdEG/VtfD0MWBvVvuk0jAcMeGPIwaH3tc4IHGKJjSBUI196BHh0RMMTFkJPB5Q0BxpGAISiGzBIubwgwyAMM4TAkZ9Bvq5juJGCIhSE/g977JnX0AEMUDEcEwphNxIYurN10m4rhLAbDdtSbuZCAYQiG4xgM3l6yuwcYZmA4MRCm7LXaNyJgGIvhaAazNh7uRQKGgRhOZzB3F+7rHmAYgkEgLNmS/mJEwLDifBzCYNHfZ2gmAcPcpD6KwdI/VvLwXLjpJhBOwVB4UmDA4AgMtSRgMC9KjqF81gSDQDgCw6YL6+gYMNgUQzMJGMyLcmJouEMHQ+sVxejfAcOvoVYeETC0BqvRvwOGLjetj7vpVn2wjP6tMARfWEfB0HiMjP7dMEReWIfAYM/0A6tkIXEWBn9N42QM0RbWyzBgAMNr1z7XlAoDBur/YdrmYWMMAkG9M1gbImJLDBgY94WDsmqo7HfTDQMYagfr/IX1cAwCQTUP1skL64EYMFAXMVwhEQgDBqoXhrb/awqBQSCoERhula9ZL8aAgRqKoXyYLcaAgZqD4eJ4G4tBIKheQtYurC9hwEAtxNBGYggGDFQEDIWjcRQGgaCiYeiysK7GgIGKieH6wroCg0BQ8TE0D9RSDBiojTC0DdoiDBioHTFUPfr6GINAUOPGfcCF9X0MGKg0GMpJ3MGAgcqHoYRENQanVu2L4X0PFRicVJUAwzsL6zsYtD68YdAaBq3/7p8+iN4yRnaJSgAAAABJRU5ErkJggg==';
+            var SAMPLE_IMG2 =
+                '<img class="sample-img sample-img--right" alt="ダミー画像（PNG）" src="' + PNG_URI + '">';
+            // 左に float（本文は右へ回り込む）
+            var SAMPLE_IMG_LEFT =
+                '<img class="sample-img" alt="ダミー画像（PNG）" src="' + PNG_URI + '">';
+            // 左に配置するが float なし（割り込みなし＝本文は画像の下から）
+            var SAMPLE_IMG_BLOCK =
+                '<img class="sample-img sample-img--block" alt="ダミー画像（PNG）" src="' + PNG_URI + '">';
+
+            var SAMPLE = {
+                'No.':   '12',
+                'Date':  '2026年8月30日',
+                'Title': '光合成のしくみ ― 環境要因と反応速度のまとめ',
+                'body':
+                    SAMPLE_IMG +
+                    '光合成は、光エネルギーを使って二酸化炭素と水から有機物（グルコース）と' +
+                    '酸素をつくる反応。左の図のように、光・水・二酸化炭素の3つがそろって初めて' +
+                    '進行する。葉の内部では葉緑体のチラコイドで光を受け取り、ストロマで炭素を' +
+                    '固定してデンプンをつくる。\n' +
+                    '\n' +
+                    '・光の強さ … ある点までは強いほど速い（光飽和点）\n' +
+                    '・二酸化炭素濃度 … 濃いほど速いが頭打ちになる\n' +
+                    '・温度 … 酵素反応なので最適温度がある（約30〜35℃）\n' +
+                    '\n' +
+                    SAMPLE_IMG2 +
+                    '【考察1・右に画像／割り込みあり】右のダミー画像（PNG）は本文の途中に' +
+                    '差し込んだもの。float: right なので、テキストは画像の左側へ回り込む。' +
+                    '画像の高さを罫線の整数倍にしておくと、回り込みが終わった後の行も' +
+                    'そのまま罫線に乗る。\n' +
+                    '\n' +
+                    SAMPLE_IMG_LEFT +
+                    '【考察2・左に画像／割り込みあり】これは float: left のパターン。' +
+                    'ダミー画像が左に浮き、本文は画像の右側へ回り込む。文章が画像より' +
+                    '長ければ、下端で全幅に戻って続きが流れる。ノートに写真を貼って' +
+                    'その横に説明を書くときの典型的なレイアウト。\n' +
+                    '\n' +
+                    SAMPLE_IMG_BLOCK +
+                    '【考察3・左に画像／割り込みなし】画像を block 表示（float なし）に' +
+                    'したパターン。テキストは横に回り込まず、必ず画像の下から始まる。' +
+                    '図を大きく見せたいときや、キャプションを画像の直下に置きたいときに使う。\n' +
+                    '\n' +
+                    '反応の速さは「最も不足している条件（限定要因）」で決まる。'
+            };
+
+            var body = document.querySelector('.writing-area');
+            var values = Array.prototype.slice.call(
+                document.querySelectorAll('.sheet-head .value')
+            );
+            var editables = [body].concat(values);
+            var saved = null;
+
+            function currentSkin() {
+                var r = document.querySelector('input[name="skin"]:checked');
+                return r ? r.value : 'real';
+            }
+
+            function apply() {
+                var view = currentSkin() === 'view';
+
+                if (view && saved === null) {
+                    saved = { body: body.innerHTML, values: values.map(function (el) {
+                        return el.textContent;
+                    }) };
+                    body.innerHTML = SAMPLE.body;
+                    values.forEach(function (el) {
+                        var key = el.getAttribute('aria-label');
+                        if (SAMPLE[key] != null) el.textContent = SAMPLE[key];
+                    });
+                } else if (!view && saved !== null) {
+                    body.innerHTML = saved.body;
+                    values.forEach(function (el, i) { el.textContent = saved.values[i]; });
+                    saved = null;
+                }
+
+                editables.forEach(function (el) {
+                    el.setAttribute('contenteditable', view ? 'false' : 'true');
+                });
+            }
+
+            document.querySelectorAll('input[name="skin"]').forEach(function (r) {
+                r.addEventListener('change', apply);
+            });
+            apply();
+        })();
+    </script>
+</body>
+</html>

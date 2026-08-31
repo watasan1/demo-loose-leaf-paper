@@ -7,11 +7,11 @@
     --line-height: 27px;       /* 罫線の間隔（≒A罫 7mm 相当） */
     --rule-color: #dcdcd8;     /* 横罫線（うすいグレー） */
     --margin-color: #cececa;   /* 左の縦マージン線（グレー） */
-    --margin-x: 92px;          /* マージン線の位置 */
+    --margin-x: 44px;          /* マージン線の位置（スマホ：綴じ穴に寄せる。768px以上で 92px） */
     --margin-w: 1px;           /* マージン線の太さ */
     --paper: #fcfbf7;          /* 用紙の白（ごくわずかに暖色） */
     --rule-top: 127px;         /* 上の余白（No./Date. + 2行分の Title / 文字を罫線から5px上に） */
-    --gutter: 104px;           /* 綴じ代（左パディング） */
+    --gutter: 56px;            /* 綴じ代（左パディング）（スマホ。768px以上で 104px） */
     --edge: 40px;              /* 右の余白（罫線は端まで伸ばさない） */
     --ink: #3a3a3a;            /* 筆記色（黒鉛筆寄り） */
     --hole: 11px;             /* 通常の綴じ穴サイズ */
@@ -154,7 +154,7 @@ body {
 .sheet-head .hrow {
     display: flex;
     align-items: baseline;
-    gap: 48px;
+    gap: 20px;                 /* スマホ：No./Date. が折り返さない幅。768px以上で 48px */
     padding-bottom: 5px;
     border-bottom: 1px solid var(--margin-color);
 }
@@ -285,6 +285,11 @@ body {
     object-fit: cover;
 }
 
+/* 図版（SVG）は全体を見せる（レターボックス） */
+.writing-area img.sample-img[src$=".svg"] {
+    object-fit: contain;
+}
+
 /* 右寄せ版：本文は画像の左へ回り込む。本文の途中に差し込んでも可 */
 .writing-area .sample-img--right {
     float: right;
@@ -298,6 +303,27 @@ body {
     float: none;
     display: block;
     margin: 0 0 var(--line-height) 0;
+}
+
+/* 本文中の段落。ブラウザ既定マージン（1em）は罫線グリッドを崩すので 0 にし、
+   段落間は罫線ピッチの整数倍だけ空ける。 */
+.writing-area p {
+    margin: 0 0 var(--line-height) 0;
+}
+
+.writing-area p:last-child {
+    margin-bottom: 0;
+}
+
+/* 本文中の箇条書き。既定マージン（1em）は罫線グリッドを崩すので調整。
+   各 li は line-height 継承（27px）＝1行ぶんで罫線に乗る。 */
+.writing-area ul {
+    margin: 0 0 var(--line-height) 0;
+    padding-left: 1.5em;
+}
+
+.writing-area li {
+    margin: 0;
 }
 
 /* ===== クラシック（最初のデザイン）への上書き ===== */
@@ -358,6 +384,17 @@ body {
 .controls:has(input[value="view"]:checked) ~ .sheet .writing-area:empty::before,
 .controls:has(input[value="view"]:checked) ~ .sheet .value:empty::before {
     content: "";                       /* 表示モードではプレースホルダーを出さない */
+}
+
+/* ===== レスポンシブ =====
+   スマートフォン（〜767px）は上の :root 既定で ::before（縦マージン線）を
+   綴じ穴の近くに寄せる。768px 以上は従来の位置に戻す。 */
+@media (min-width: 768px) {
+    :root {
+        --margin-x: 92px;
+        --gutter: 104px;
+    }
+    .sheet-head .hrow { gap: 48px; }
 }
 
 /* ===== 印刷 ===== */
